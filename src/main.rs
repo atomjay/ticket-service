@@ -72,6 +72,7 @@ async fn main() {
     // 初始化各種存儲庫
     // 存儲庫負責與數據庫交互，執行 CRUD 操作
     // Arc 使這些存儲庫可以在多個服務之間安全共享
+    // pool.clone() 是複製的是資料庫連接池的智慧指針（增加引用計數），而非實際建立新連線，避免重複建立連線造成的資源浪費
     let user_repository = Arc::new(PgUserRepository::new(pool.clone()));
     let concert_repository = Arc::new(PgConcertRepository::new(pool.clone()));
     let ticket_repository = Arc::new(PgTicketRepository::new(pool.clone()));
