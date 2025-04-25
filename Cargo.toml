@@ -1,0 +1,8 @@
+[workspace]
+members = ["api", "corelib"]
+resolver = "3"  # 2024 edition 預設解析器
+edition = "2024"
+
+[workspace.dependencies]
+axum = "0.7"
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio"] }
