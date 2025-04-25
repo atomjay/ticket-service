@@ -95,6 +95,119 @@ main.rs (入口點)
         └─> error.rs (錯誤處理)
 ```
 
+### 領域驅動設計 (DDD) 實踐
+
+本專案採用領域驅動設計 (Domain-Driven Design, DDD) 作為核心架構理念，通過將複雜的業務邏輯組織成清晰的領域模型，實現了高內聚、低耦合的系統設計。
+
+#### 1. 分層架構
+
+專案遵循嚴格的分層架構，確保關注點分離：
+
+- **領域層 (Domain Layer)**：核心業務邏輯的所在地，不依賴於其他層
+- **應用層 (Application Layer)**：協調領域對象完成用戶請求，實現業務用例
+- **基礎設施層 (Infrastructure Layer)**：提供技術實現，如資料庫存取
+- **介面層 (Interface/API Layer)**：處理用戶請求，將其轉換為應用層的調用
+
+#### 2. 領域模型
+
+專案中的領域模型反映了票務系統的核心業務概念：
+
+- **實體 (Entities)**：如 `Concert`、`Ticket`、`Order` 等具有唯一標識符的模型
+- **值對象 (Value Objects)**：如 `CreateOrder`、`OrderQuery` 等不需要唯一標識的對象
+- **聚合 (Aggregates)**：如 `OrderView` 聚合了訂單、票券和演唱會的信息
+
+例如，訂單相關的領域模型：
+
+```rust
+// 訂單實體
+pub struct Order {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub ticket_id: Uuid,
+    pub quantity: i32,
+    pub created_at: NaiveDateTime,
+}
+
+// 創建訂單值對象
+pub struct CreateOrder {
+    pub ticket_id: Uuid,
+    #[validate(range(min = 1))]
+    pub quantity: i32,
+}
+
+// 訂單視圖（聚合）
+pub struct OrderView {
+    pub id: Uuid,
+    pub quantity: i32,
+    pub created_at: NaiveDateTime,
+    pub ticket_type: String,
+    pub price: f64,
+    pub concert_title: String,
+    pub concert_date: NaiveDateTime,
+}
+```
+
+#### 3. 儲存庫模式 (Repository Pattern)
+
+儲存庫模式是 DDD 的核心模式之一，在專案中通過以下方式實現：
+
+- **儲存庫介面**：在領域層定義抽象介面，如 `ConcertRepository`、`OrderRepository`
+- **儲存庫實現**：在基礎設施層實現這些介面，如 `PgConcertRepository`、`PgOrderRepository`
+
+例如，演唱會儲存庫介面：
+
+```rust
+#[async_trait]
+pub trait ConcertRepository: Send + Sync {
+    /// 根據 ID 查找演唱會
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<Concert>, AppError>;
+    
+    /// 獲取所有演唱會
+    async fn find_all(&self) -> Result<Vec<Concert>, AppError>;
+    
+    /// 創建新演唱會
+    async fn create(&self, input: &CreateConcert) -> Result<Concert, AppError>;
+}
+```
+
+#### 4. 依賴倒置原則 (DIP)
+
+專案通過以下方式實現依賴倒置原則：
+
+- 高層模組（應用服務）依賴於抽象（儲存庫介面），而非具體實現
+- 通過構造函數注入依賴，使用 `Arc<dyn Repository>` 實現依賴的共享和多線程安全
+
+例如，演唱會服務的實現：
+
+```rust
+pub struct ConcertService {
+    concert_repository: Arc<dyn ConcertRepository>,
+}
+
+impl ConcertService {
+    pub fn new(concert_repository: Arc<dyn ConcertRepository>) -> Self {
+        Self { concert_repository }
+    }
+    
+    // 業務方法...
+}
+```
+
+#### 5. 通用語言 (Ubiquitous Language)
+
+專案中使用與票務領域相關的術語，建立了開發人員和領域專家都能理解的通用語言：
+
+- 使用領域專家和開發人員都能理解的術語：`Concert`、`Ticket`、`Order` 等
+- 代碼註釋和變數命名反映了業務概念，如 `ticket_type`、`concert_title`、`venue` 等
+
+#### 6. 邊界上下文 (Bounded Contexts)
+
+專案通過模組化結構實現了邊界上下文的概念：
+
+- 將不同的業務領域分隔為獨立的模組：`auth`、`concert`、`ticket`、`order`
+- 每個模組有自己的模型和儲存庫
+- 通過應用層服務協調不同上下文之間的交互
+
 ### 詳細執行流程
 
 以下是應用程式啟動時的詳細執行流程：
