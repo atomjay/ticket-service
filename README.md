@@ -95,6 +95,105 @@ main.rs (入口點)
         └─> error.rs (錯誤處理)
 ```
 
+### 詳細執行流程
+
+以下是應用程式啟動時的詳細執行流程：
+
+```
+1. main.rs (程式入口點)
+   │
+   ├─> 讀取環境變數配置 (AppConfig::from_env())
+   │    │
+   │    └─> 從 .env 文件或系統環境變數獲取：
+   │        - DATABASE_URL
+   │        - JWT_SECRET
+   │        - PORT
+   │
+   ├─> 初始化日誌系統 (tracing_subscriber::fmt::init())
+   │
+   ├─> 初始化資料庫連接池 (init_pool())
+   │    │
+   │    └─> 從 DATABASE_URL 創建 PostgreSQL 連接池
+   │        - 設置最大連接數 (10)
+   │        - 設置連接超時 (3秒)
+   │
+   ├─> 初始化資料庫存儲庫 (Repositories)
+   │    │
+   │    ├─> PgUserRepository::new(pool.clone())
+   │    ├─> PgConcertRepository::new(pool.clone())
+   │    ├─> PgTicketRepository::new(pool.clone())
+   │    └─> PgOrderRepository::new(pool.clone())
+   │
+   ├─> 初始化應用服務 (Services)
+   │    │
+   │    ├─> AuthService::new(user_repository, jwt_secret)
+   │    ├─> ConcertService::new(concert_repository)
+   │    ├─> TicketService::new(ticket_repository, concert_repository)
+   │    └─> OrderService::new(order_repository, ticket_repository)
+   │
+   ├─> 創建 API 路由 (create_router())
+   │    │
+   │    ├─> 創建 AppState (包含所有服務的引用)
+   │    │
+   │    ├─> 定義 API 端點
+   │    │    ├─> /auth/* (認證相關)
+   │    │    ├─> /concerts (演唱會相關)
+   │    │    ├─> /tickets (票券相關)
+   │    │    └─> /orders/* (訂單相關)
+   │    │
+   │    ├─> 添加 Swagger UI (/docs)
+   │    │
+   │    └─> 添加中間件
+   │         ├─> CORS (跨域資源共享)
+   │         ├─> Trace (請求追蹤)
+   │         └─> RequestBodyLimit (請求體大小限制)
+   │
+   └─> 啟動 HTTP 服務器
+        │
+        ├─> 綁定 TCP 監聽器 (127.0.0.1:PORT)
+        │
+        └─> 開始處理 HTTP 請求 (axum::serve)
+```
+
+### 請求處理流程
+
+當收到 HTTP 請求時，處理流程如下：
+
+```
+HTTP 請求
+   │
+   ├─> 中間件處理 (Middleware)
+   │    │
+   │    ├─> CORS 檢查
+   │    ├─> 請求體大小檢查
+   │    └─> 認證檢查 (對於需要認證的端點)
+   │
+   ├─> 路由匹配 (Router)
+   │    │
+   │    └─> 將請求路由到對應的處理器 (Handler)
+   │
+   ├─> 處理器處理請求 (Handler)
+   │    │
+   │    ├─> 解析請求參數
+   │    ├─> 驗證輸入數據
+   │    └─> 調用對應的服務方法
+   │
+   ├─> 服務層處理業務邏輯 (Service)
+   │    │
+   │    ├─> 實現業務規則
+   │    └─> 調用存儲庫進行數據操作
+   │
+   ├─> 存儲庫訪問資料庫 (Repository)
+   │    │
+   │    ├─> 執行 SQL 查詢
+   │    └─> 將資料庫記錄轉換為領域模型
+   │
+   └─> 返回 HTTP 響應
+        │
+        ├─> 序列化響應數據 (JSON)
+        └─> 設置適當的 HTTP 狀態碼
+```
+
 ### 請求流程
 
 1. **客戶端請求** → `main.rs` (服務器入口點)
