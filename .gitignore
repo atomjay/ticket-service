@@ -5,8 +5,8 @@
 !.env.example
 
 # Rust 相關
-/target/
 Cargo.lock
+/target/
 **/*.rs.bk
 *.pdb
 
