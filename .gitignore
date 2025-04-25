@@ -10,17 +10,26 @@ Cargo.lock
 **/*.rs.bk
 *.pdb
 
+# SQLx 相關
+.sqlx/
+sqlx-data.json.backup
+
 # IDE 和編輯器
 .idea/
 .vscode/
 *.swp
 *.swo
 .DS_Store
+*.iml
+.project
+.classpath
+.settings/
 
 # 資料庫相關
 *.db
 *.sqlite
 *.sqlite3
+*.dump
 
 # 日誌檔案
 *.log
@@ -32,3 +41,13 @@ temp/
 
 # 本地配置
 config.local.toml
+local_settings.rs
+
+# 測試覆蓋率報告
+coverage/
+*.profraw
+*.profdata
+
+# 文檔生成
+/doc/
+/docs/generated/

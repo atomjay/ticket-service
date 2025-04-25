@@ -125,7 +125,7 @@ main.rs (入口點)
 
 創建 `.env` 文件並設置以下環境變數：
 
-```
+```bash
 DATABASE_URL=postgres://username:password@localhost:5432/ticket_service
 SECRET=your_jwt_secret
 PORT=8080
@@ -134,29 +134,33 @@ PORT=8080
 ### 運行步驟
 
 1. Clone 專案
-   ```
-   git clone https://github.com/atomjay/ticket-service.git
-   cd ticket-service
-   ```
+
+```bash
+git clone https://github.com/atomjay/ticket-service.git
+cd ticket-service
+```
 
 2. 設置資料庫
-   ```
-   # 創建資料庫
-   createdb ticket_service
-   
-   # 運行遷移
-   sqlx migrate run
-   ```
+
+```bash
+# 創建資料庫
+createdb ticket_service
+
+# 運行遷移
+sqlx migrate run
+```
 
 3. 編譯並運行
-   ```
-   cargo run
-   ```
+
+```bash
+cargo run
+```
 
 4. 訪問 API 文檔
-   ```
-   http://localhost:8080/docs
-   ```
+
+```
+http://localhost:8080/docs
+```
 
 ## API 端點
 
