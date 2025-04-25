@@ -1,8 +1,19 @@
-# 個人的學習Rust專案
+# 我的 Rust 學習專案：票務系統 (Ticket Service)
 
-## 票務系統 (Ticket Service)
+這是我在學習 Rust 過程中開發的演唱會票務系統 API 服務。這個專案旨在幫助我深入理解 Rust 語言特性、Web 開發模式以及領域驅動設計 (DDD) 的實踐。
 
-這是一個使用 Rust 和 Axum 框架開發的演唱會票務系統 API 服務。系統提供了用戶認證、演唱會管理、票券管理和訂單處理等功能。
+## 學習目標
+
+通過這個專案，我希望學習以下內容：
+
+- Rust 語言的核心概念（所有權、借用、生命週期等）
+- 使用 Axum 框架進行 Web 開發
+- 實現領域驅動設計 (DDD) 和分層架構
+- 使用 SQLx 進行資料庫操作
+- JWT 認證和安全性實踐
+- 非同步程式設計
+- 錯誤處理和日誌記錄
+- API 文檔生成
 
 ## 功能特點
 
@@ -13,6 +24,7 @@
 
 ## 技術棧
 
+- **語言**：Rust 2024 Edition
 - **框架**：Axum (基於 Tokio 的 Rust Web 框架)
 - **資料庫**：PostgreSQL 與 SQLx
 - **認證**：JWT (JSON Web Tokens)
@@ -42,6 +54,7 @@ main.rs (入口點)
   │     │           ├─> concert_repository.rs
   │     │           ├─> ticket_repository.rs
   │     │           └─> order_repository.rs
+  │     └─> http.rs (HTTP 相關工具函數)
   │
   ├─> domain/ (領域層)
   │     ├─> auth/
@@ -79,6 +92,7 @@ main.rs (入口點)
   │     └─> routes.rs (路由定義)
   │
   └─> utils/ (工具函數)
+        └─> error.rs (錯誤處理)
 ```
 
 ### 請求流程
@@ -112,16 +126,16 @@ main.rs (入口點)
 創建 `.env` 文件並設置以下環境變數：
 
 ```
-DATABASE_URL=postgres://username:password@localhost/ticket_service
-JWT_SECRET=your_jwt_secret
-PORT=3000
+DATABASE_URL=postgres://username:password@localhost:5432/ticket_service
+SECRET=your_jwt_secret
+PORT=8080
 ```
 
 ### 運行步驟
 
-1. 克隆專案
+1. Clone 專案
    ```
-   git clone <repository-url>
+   git clone https://github.com/atomjay/ticket-service.git
    cd ticket-service
    ```
 
@@ -131,7 +145,6 @@ PORT=3000
    createdb ticket_service
    
    # 運行遷移
-   sqlx database create
    sqlx migrate run
    ```
 
@@ -142,48 +155,62 @@ PORT=3000
 
 4. 訪問 API 文檔
    ```
-   http://localhost:3000/docs
+   http://localhost:8080/docs
    ```
 
 ## API 端點
 
 ### 認證 API
 
-- `POST /api/users/register` - 用戶註冊
-- `POST /api/users/login` - 用戶登入
-- `GET /api/users/me` - 獲取當前用戶信息
+- `POST /auth/register` - 用戶註冊
+- `POST /auth/login` - 用戶登入
+- `GET /auth/me` - 獲取當前用戶信息
 
 ### 演唱會 API
 
-- `POST /api/concerts` - 創建演唱會 (管理員)
-- `GET /api/concerts` - 獲取演唱會列表
+- `POST /concerts` - 創建演唱會 (管理員)
+- `GET /concerts` - 獲取演唱會列表
 
 ### 票券 API
 
-- `POST /api/tickets` - 創建票券 (管理員)
-- `GET /api/tickets` - 獲取票券列表
+- `POST /tickets` - 創建票券 (管理員)
+- `GET /tickets` - 獲取票券列表
 
 ### 訂單 API
 
-- `POST /api/orders` - 創建訂單
-- `GET /api/orders` - 獲取訂單列表
-- `GET /api/orders/:id` - 獲取訂單詳情
+- `POST /orders` - 創建訂單
+- `GET /orders` - 獲取訂單列表
+- `GET /orders/:order_id` - 獲取訂單詳情
 
-## 開發指南
+## 學習筆記
 
-### 添加新功能
+### Rust 特性應用
 
-1. 在 `domain` 層定義模型和存儲庫介面
-2. 在 `infrastructure` 層實現存儲庫
-3. 在 `application` 層實現服務邏輯
-4. 在 `api/handlers` 中添加處理器
-5. 在 `api/routes.rs` 中註冊路由
+- **所有權系統**：通過使用引用計數（Arc）在服務間共享資源
+- **錯誤處理**：使用 `Result` 和自定義錯誤類型 `AppError`
+- **非同步程式設計**：使用 `async/await` 實現非阻塞操作
+- **特徵（Traits）**：定義存儲庫介面和實現
 
-### 代碼風格
+### 遇到的挑戰
 
-- 使用 `rustfmt` 格式化代碼
-- 遵循 Rust 命名慣例
-- 為公共 API 添加文檔註釋
+1. **SQLx 離線模式**：學習如何使用 SQLx 的離線模式，避免在編譯時需要連接資料庫
+2. **認證中間件**：實現 JWT 認證和權限檢查
+3. **資料庫遷移**：管理資料庫結構的變更
+4. **錯誤處理**：設計合理的錯誤處理機制
+
+### 未來改進
+
+- 添加更多的單元測試和整合測試
+- 實現更完善的日誌記錄
+- 添加更多的業務邏輯，如票券庫存管理
+- 優化性能和安全性
+
+## 參考資源
+
+- [Rust 官方文檔](https://doc.rust-lang.org/book/)
+- [Axum 文檔](https://docs.rs/axum/latest/axum/)
+- [SQLx 文檔](https://docs.rs/sqlx/latest/sqlx/)
+- [領域驅動設計 (DDD) 實踐](https://martinfowler.com/bliki/DomainDrivenDesign.html)
 
 ## 授權
 
